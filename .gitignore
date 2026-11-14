@@ -1,0 +1,7 @@
+data/raw/*.tif
+
+data/processed/*.npy
+
+__pycache__/
+
+*.pyc
