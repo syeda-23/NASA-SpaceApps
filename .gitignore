@@ -1,5 +1,5 @@
 data/raw/*.tif
-
+data/processed/traversability_matrix.csv
 data/processed/*.npy
 
 __pycache__/
@@ -8,4 +8,4 @@ __pycache__/
 
 .venv
 
-geology
+geologydata/processed/traversability_matrix.csv

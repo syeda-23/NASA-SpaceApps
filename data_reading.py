@@ -76,8 +76,8 @@ def main():
             rasterio.windows.Window(
                 col_off=10000,
                 row_off=10000,
-                width=2000,
-                height=2000
+                width=5000,
+                height=5000
             )
         )
 
@@ -219,10 +219,10 @@ def main():
         1,
 
         "roi_width_pixels":
-        2000,
+        5000,
 
         "roi_height_pixels":
-        2000,
+        5000,
 
         "col_off":
         10000,

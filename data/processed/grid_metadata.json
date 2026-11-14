@@ -1,9 +1,9 @@
 {
-  "rows": 2000,
-  "cols": 2000,
+  "rows": 5000,
+  "cols": 5000,
   "cell_size_m": 1,
-  "roi_width_pixels": 2000,
-  "roi_height_pixels": 2000,
+  "roi_width_pixels": 5000,
+  "roi_height_pixels": 5000,
   "col_off": 10000,
   "row_off": 10000
 }
