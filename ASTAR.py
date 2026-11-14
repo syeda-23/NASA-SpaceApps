@@ -2,14 +2,38 @@ import numpy as np
 import math
 import heapq
 import rasterio
+from rasterio.windows import from_bounds
+from rasterio.enums import Resampling
 import matplotlib.pyplot as plt
 
-terrain = np.ones((20, 20))
-terrain[5:15, 8:12] = 10        # Expensive terrain
-terrain[10:13, 8:12] = np.inf   # Impassable terrain
+TIF = "data/raw/gale_dem_1m.tif"    
+SCALE = 20               # 1 m pixels -> 20 m pixels
+MAX_SLOPE = 25           # degrees; steeper = impassable
+LEFT, BOTTOM, RIGHT, TOP = 8140000, -289000, 8149000, -270000  # crop (metres)
 
-start = (2, 2)
-goal = (17, 17)
+with rasterio.open(TIF) as src:
+    window = from_bounds(LEFT, BOTTOM, RIGHT, TOP, src.transform)
+    dem = src.read(
+        1,
+        window=window,
+        out_shape=(int(window.height // SCALE), int(window.width // SCALE)),
+        resampling=Resampling.average,
+        masked=True,
+    ).astype(float).filled(np.nan)
+    pixel = src.res[0] * SCALE
+
+dy, dx = np.gradient(dem, pixel)
+slope = np.degrees(np.arctan(np.hypot(dx, dy)))
+
+terrain = 1 + slope / 5                # expensive = steeper
+terrain[slope > MAX_SLOPE] = np.inf    # impassable = too steep
+terrain[np.isnan(terrain)] = np.inf    # impassable = no data
+
+rows, cols = terrain.shape
+
+
+start = (rows - 50, 50) #Manual start and goal position, adapt to 
+goal = (50, cols - 50)
 
 # Euclidean distance
 def heuristic(a, b):
@@ -33,7 +57,9 @@ def astar(terrain, start, goal):
             return path[::-1]
 
         row, col = current
-        neighbours = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]
+        neighbours = [(row + dr, col + dc)
+                      for dr in (-1, 0, 1) for dc in (-1, 0, 1)
+                      if (dr, dc) != (0, 0)]
 
         for neighbour in neighbours:
             r, c = neighbour
@@ -42,7 +68,8 @@ def astar(terrain, start, goal):
             if np.isinf(terrain[r, c]):
                 continue
 
-            new_g = g_score[current] + terrain[r, c]
+            step = math.hypot(r - row, c - col)        # 1 straight, 1.414 diagonal
+            new_g = g_score[current] + terrain[r, c] * step
 
             if neighbour not in g_score or new_g < g_score[neighbour]:
                 came_from[neighbour] = current
@@ -55,9 +82,9 @@ def astar(terrain, start, goal):
 path = astar(terrain, start, goal)
 print(path)
 
-display = np.where(np.isinf(terrain), 20, terrain)
-plt.imshow(display, cmap="viridis")
-plt.colorbar(label="Terrain cost")
+plt.imshow(dem, cmap="terrain")
+plt.colorbar(label="Elevation (m)")
+plt.imshow(np.where(np.isinf(terrain), 1, np.nan), cmap="Greys", alpha=0.5)  # grey = impassable
 plt.scatter(start[1], start[0], color="green", label="Start")
 plt.scatter(goal[1], goal[0], color="red", label="Goal")
 

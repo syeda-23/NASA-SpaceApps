@@ -3,4 +3,4 @@ rasterio
 pyproj
 matplotlib
 requests
-rqdm
+tqdm
