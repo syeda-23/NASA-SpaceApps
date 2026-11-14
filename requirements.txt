@@ -1,6 +1,9 @@
-numpty
+numpy
 rasterio
 pyproj
 matplotlib
 requests
-rqdm
+tqdm
+streamlit
+geopandas
+scipy

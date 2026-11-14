@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 import numpy as np
 import rasterio
@@ -24,7 +25,9 @@ DEM_FILE = (
 
 def calculate_slope(dem):
 
-    dy, dx = np.gradient(dem)
+    dy, dx = np.gradient(
+        dem
+    )
 
     slope = np.sqrt(
         dx**2 +
@@ -50,47 +53,17 @@ def calculate_roughness(dem):
 
 def normalise(arr):
 
-    arr = (
-        arr -
-        np.nanmin(arr)
+    mn = np.nanmin(arr)
+    mx = np.nanmax(arr)
+
+    if mx == mn:
+        return np.zeros_like(arr)
+
+    return (
+        arr - mn
+    ) / (
+        mx - mn
     )
-
-    arr = (
-        arr /
-        np.nanmax(arr)
-    )
-
-    return arr
-
-
-def build_cost_matrix(dem):
-
-    slope = calculate_slope(
-        dem
-    )
-
-    roughness = (
-        calculate_roughness(
-            dem
-        )
-    )
-
-    slope_norm = (
-        normalise(slope)
-    )
-
-    roughness_norm = (
-        normalise(
-            roughness
-        )
-    )
-
-    cost_matrix = (
-        0.7 * slope_norm +
-        0.3 * roughness_norm
-    )
-
-    return cost_matrix
 
 
 def main():
@@ -99,13 +72,13 @@ def main():
         DEM_FILE
     ) as src:
 
-        # Hackathon-sized crop
-
-        window = rasterio.windows.Window(
-            col_off=10000,
-            row_off=10000,
-            width=2000,
-            height=2000
+        window = (
+            rasterio.windows.Window(
+                col_off=10000,
+                row_off=10000,
+                width=2000,
+                height=2000
+            )
         )
 
         dem = src.read(
@@ -113,60 +86,202 @@ def main():
             window=window
         )
 
+        transform = (
+            src.window_transform(
+                window
+            )
+        )
+
+        profile = (
+            src.profile.copy()
+        )
+
+        profile.update(
+            width=window.width,
+            height=window.height,
+            transform=transform
+        )
+
     print(
-        f"DEM shape: {dem.shape}"
+        f"DEM Shape: {dem.shape}"
     )
 
     print(
-        f"Elevation range:"
+        f"Elevation Range:"
         f" {dem.min():.2f}"
-        f" -> {dem.max():.2f}"
+        f" -> "
+        f"{dem.max():.2f}"
     )
 
-    cost_matrix = (
-        build_cost_matrix(
+    # -----------------------
+    # Save cropped DEM
+    # -----------------------
+
+    cropped_dem_file = (
+        PROCESSED_DIR /
+        "cropped_dem.tif"
+    )
+
+    with rasterio.open(
+        cropped_dem_file,
+        "w",
+        **profile
+    ) as dst:
+
+        dst.write(
+            dem,
+            1
+        )
+
+    # -----------------------
+    # Slope
+    # -----------------------
+
+    slope = (
+        calculate_slope(
             dem
         )
     )
 
-    npy_file = (
-        PROCESSED_DIR /
-        "traversability_matrix.npy"
-    )
-
-    csv_file = (
-        PROCESSED_DIR /
-        "traversability_matrix.csv"
+    slope_norm = (
+        normalise(
+            slope
+        )
     )
 
     np.save(
-        npy_file,
-        cost_matrix
+        PROCESSED_DIR /
+        "slope.npy",
+        slope_norm
+    )
+
+    # -----------------------
+    # Roughness
+    # -----------------------
+
+    roughness = (
+        calculate_roughness(
+            dem
+        )
+    )
+
+    roughness_norm = (
+        normalise(
+            roughness
+        )
+    )
+
+    # -----------------------
+    # Traversability
+    # -----------------------
+
+    traversability = (
+        0.7 * slope_norm +
+        0.3 * roughness_norm
+    )
+
+    np.save(
+        PROCESSED_DIR /
+        "traversability_matrix.npy",
+        traversability
     )
 
     np.savetxt(
-        csv_file,
-        cost_matrix,
+        PROCESSED_DIR /
+        "traversability_matrix.csv",
+        traversability,
         delimiter=","
     )
 
-    print("\nOutputs generated:")
-    print(npy_file)
-    print(csv_file)
+    traversable = (
+        traversability < 0.8
+    )
+
+    np.save(
+        PROCESSED_DIR /
+        "traversable.npy",
+        traversable
+    )
+
+    metadata = {
+
+        "rows":
+        int(
+            traversability.shape[0]
+        ),
+
+        "cols":
+        int(
+            traversability.shape[1]
+        ),
+
+        "cell_size_m":
+        1,
+
+        "roi_width_pixels":
+        2000,
+
+        "roi_height_pixels":
+        2000,
+
+        "col_off":
+        10000,
+
+        "row_off":
+        10000
+    }
+
+    with open(
+        PROCESSED_DIR /
+        "grid_metadata.json",
+        "w"
+    ) as f:
+
+        json.dump(
+            metadata,
+            f,
+            indent=2
+        )
+
+    print("\nGenerated:\n")
 
     print(
-        f"\nMatrix shape:"
-        f" {cost_matrix.shape}"
+        "cropped_dem.tif"
     )
 
     print(
-        f"Min cost:"
-        f" {cost_matrix.min():.4f}"
+        "slope.npy"
     )
 
     print(
-        f"Max cost:"
-        f" {cost_matrix.max():.4f}"
+        "traversability_matrix.npy"
+    )
+
+    print(
+        "traversable.npy"
+    )
+
+    print(
+        "grid_metadata.json"
+    )
+
+    print(
+        "\nCost Stats"
+    )
+
+    print(
+        "Min:",
+        traversability.min()
+    )
+
+    print(
+        "Max:",
+        traversability.max()
+    )
+
+    print(
+        "Mean:",
+        traversability.mean()
     )
 
 
