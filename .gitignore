@@ -5,3 +5,5 @@ data/processed/*.npy
 __pycache__/
 
 *.pyc
+
+.venv
