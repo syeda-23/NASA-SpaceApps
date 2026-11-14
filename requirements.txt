@@ -3,11 +3,7 @@ rasterio
 pyproj
 matplotlib
 requests
-<<<<<<< HEAD
 tqdm
 streamlit
 geopandas
 scipy
-=======
-tqdm
->>>>>>> 78e8afc00438473e465498a6c87a87cc0d91dcaf

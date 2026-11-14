@@ -73,14 +73,13 @@ def main():
     ) as src:
 
         window = (
-            rasterio.windows.Window(
-                col_off=10000,
-                row_off=10000,
-                width=5000,
-                height=5000
-            )
-        )
-
+    rasterio.windows.Window(
+        col_off=13506,
+        row_off=32718,
+        width=5000,
+        height=5000
+    )
+)
         dem = src.read(
             1,
             window=window
@@ -180,18 +179,18 @@ def main():
         0.3 * roughness_norm
     )
 
-    np.save(
-        PROCESSED_DIR /
-        "traversability_matrix.npy",
-        traversability
-    )
+    # np.save(
+    #    PROCESSED_DIR /
+    #    "traversability_matrix.npy",
+    #    traversability
+    # )
 
-    np.savetxt(
-        PROCESSED_DIR /
-        "traversability_matrix.csv",
-        traversability,
-        delimiter=","
-    )
+    # np.savetxt(
+    #   PROCESSED_DIR /
+    #    "traversability_matrix.csv",
+    #    traversability,
+    #    delimiter=","
+    #)
 
     traversable = (
         traversability < 0.8
@@ -218,17 +217,11 @@ def main():
         "cell_size_m":
         1,
 
-        "roi_width_pixels":
-        5000,
+        "roi_width_pixels": 5000,
+        "roi_height_pixels": 5000,
 
-        "roi_height_pixels":
-        5000,
-
-        "col_off":
-        10000,
-
-        "row_off":
-        10000
+        "col_off": 13506,
+        "row_off": 32718
     }
 
     with open(

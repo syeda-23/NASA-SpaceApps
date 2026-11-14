@@ -8,4 +8,4 @@ __pycache__/
 
 .venv
 
-geologydata/processed/traversability_matrix.csv
+geology
