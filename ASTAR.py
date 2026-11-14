@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 TIF = "data/processed/cropped_dem.tif"
 
+
 # ---- Choose the area (in 1 m pixels) ----
 COL_OFF, ROW_OFF = 0, 0          # top-left corner of the area
 WIDTH, HEIGHT = 32980, 57440     # size (gets clipped to the file automatically)
