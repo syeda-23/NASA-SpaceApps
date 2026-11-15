@@ -183,5 +183,11 @@ Important limitations include:
    https://data.mendeley.com/datasets/6g3c3g6b9z/1
 8. NASA Planetary Data System Geosciences Node. **Mars Science Laboratory - CheMin.**  
    https://pds-geosciences.wustl.edu/missions/msl/chemin.htm
-## Final Note
-**Glen Torridon Navigator turns existing Mars data into an exploration decision.** By combining topography, surface roughness, mapped geological features and A* route optimisation, the prototype demonstrates how future planetary explorers could balance getting somewhere efficiently with getting there safely and making the journey scientifically worthwhile.
+## Installation Instructions
+
+1. Clone the repository by running this in the terminal ```git clone https://github.com/syeda-23/NASA-SpaceApps.git```
+
+2. Download the datasets listed above
+3. Navigate to the cloned repository folder
+4. Install required Python packages and dependencies by running ```pip install -r requirements.txt```
+5. Run our project by executing ```python app.py```
