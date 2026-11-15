@@ -247,7 +247,7 @@ Important limitations include:
    ```
 5. Run the project:
    ```bash
-   python app.py
+   streamlit run app.py
    ```
 
 <div align="center">
