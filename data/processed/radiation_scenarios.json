@@ -1,0 +1,19 @@
+{
+    "source": "MSL Curiosity RAD E-detector dose-rate dataset",
+    "campaign": "Glen Torridon campaign period",
+    "sol_start": 2300,
+    "sol_end": 3072,
+    "dose_rate_unit": "microgray/day",
+    "spatial_raster": false,
+    "scenarios": {
+        "low": 303.75830881247003,
+        "nominal": 308.6780987965746,
+        "elevated": 319.46132692741344,
+        "minimum": 276.3875037636022,
+        "maximum": 490.3656008422682,
+        "mean": 308.92295888125403,
+        "standard_deviation": 8.281118292820212,
+        "measurement_count": 68024
+    },
+    "interpretation": "Historical Curiosity RAD measurements used to create route-planning radiation scenarios. These measurements do not represent an exact future radiation forecast."
+}
