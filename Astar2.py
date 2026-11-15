@@ -1,11 +1,13 @@
 import numpy as np
 import math
+import os
 import heapq
 import rasterio
 from rasterio.windows import Window
 from rasterio.enums import Resampling
 import matplotlib.pyplot as plt
-
+from scipy.ndimage import uniform_filter
+import csv
 
 # ============================================================
 # SETTINGS
@@ -15,12 +17,15 @@ TIF = "data/processed/cropped_dem.tif"
 GEOLOGY_FILE = "data/processed/science_value.npy"
 
 TARGET = 1600
-MAX_SLOPE = 25
+MAX_SLOPE = 20
 
 # 0 = geology ignored
 # 1-3 = moderate geological preference
 # 5+ = strong geological preference
 GEOLOGY_WEIGHT = 3.0
+
+ROUGHNESS_WEIGHT = 2.0
+MAX_ROUGHNESS = 0.5  
 
 # Window inside the cropped files
 COL_OFF = 0
@@ -240,8 +245,11 @@ print(
         np.nanmax(slope)
     )
 )
+ 
 
-
+dem64 = dem.astype(np.float64)
+detrended = dem64 - uniform_filter(dem64, size=5)
+roughness = np.sqrt(uniform_filter(detrended**2, size=5))
 # ============================================================
 # COMBINE SLOPE AND GEOLOGY INTO TERRAIN COST
 # ============================================================
@@ -259,16 +267,27 @@ geology_cost = (
     * (1 - geology_normalised)
 )
 
-terrain = (
-    1
-    + slope_cost
-    + geology_cost
-)
+terrain = 1 + slope_cost + geology_cost + ROUGHNESS_WEIGHT * roughness
+
+terrain[(slope > MAX_SLOPE) | (roughness > MAX_ROUGHNESS) | ~np.isfinite(terrain)] = np.inf
 
 # Hard safety restrictions
 terrain[slope > MAX_SLOPE] = np.inf
 terrain[np.isnan(dem)] = np.inf
 terrain[~valid_geology] = np.inf
+
+rows, cols = terrain.shape
+yy, xx = np.mgrid[0:rows, 0:cols]
+
+with open("data/obstacles.csv") as f:
+    for ob in csv.DictReader(f):
+        r = int(float(ob["y_km"]) / (pixel_y / 1000))
+        c = int(float(ob["x_km"]) / (pixel_x / 1000))
+        rad = float(ob["radius_m"]) / pixel_x
+        terrain[(yy - r)**2 + (xx - c)**2 <= rad**2] = np.inf
+
+
+
 
 rows, cols = terrain.shape
 
@@ -279,7 +298,6 @@ print(
         * np.isinf(terrain).mean()
     )
 )
-
 
 # ============================================================
 # FIND NEAREST PASSABLE CELL
